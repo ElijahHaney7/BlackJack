@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    For my Final I decided to make a blackjack website using: https://deckofcardsapi.com/
+
+    Sorry my code is really messy, but I have tried to add comments to any major parts of my code, 
+    but most of it is quite repetitive logic to make it add the right amount to each hand, and to compare your hand to the dealer. 
+    Hope you enjoy!
+  -->
+  <title>blackjack</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&family=Special+Gothic+Condensed+One&display=swap" rel="stylesheet">
+<link rel="icon" type="image/x-icon" href="Logo.png">
+<style>
+body{
+    margin: none;
+    background-color: #168416;
+    font-family: "Special Gothic Condensed One", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+
+}
+#controlsBox {
+    width: 100%;
+    height: fit-content;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    bottom: 20px;
+
+}
+#dealerBox, #playerBox {
+    width: 100%;
+    height: fit-content;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+}
+.controlButtons {
+    height: 100px;
+    width: 100px;
+    background-color: #ccc;
+    border-radius: 50%;
+    border: dashed, black, 10px;
+    margin: 0 2% 0 2%;
+    font-family: "Special Gothic Condensed One", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 2em;
+}
+.menuB {
+    height: 40px;
+    width: 80px;
+    background-color: #ccc;
+    border-radius: 5px;
+    font-family: "Special Gothic Condensed One", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 1em;
+}
+img {
+    width: 10%;
+    margin: 0 20px 100px 0;
+}
+</style>
+</head>
+<body>
+
+<div id="main">
+    <button id="reset" class="menuB" onclick="reset()">reset</button>
+    <button id="deal" class="menuB" onclick="deal(4)">deal</button>
+<div id="winDisplay"></div>
+<div id="dealerBox">
+
+</div>
+<div id="playerBox">
+
+</div>
+<div id="controlsBox">
+    <button class="controlButtons" id="hit" onclick="hit('player')">hit</button>
+    <button class="controlButtons" id="stand" onclick="checkWin()">stand</button>
+
+</div>
+</div>
+  <script>
+
+    // setup all global variables used
+    dealerBox = document.getElementById('dealerBox');
+    playerBox = document.getElementById('playerBox');
+    winDisplay = document.getElementById('winDisplay');
+    let deck_id = "";
+    let dealerH = 0;
+    let dealerHAce = 0;
+    let playerH = 0;
+    let playerHAce = 0;
+    let drawCount = 0;
+    let dealerCount = 0;
+    let playerCount = 0;
+    let winLoss = false;
+    let playerBustH = 21;
+    let dealerBustH = 21;
+
+    // all possible drawn cards and the list of cards drawn on the player and dealers sides
+    let dealerList = [];
+    let playerList = [];
+    let drawCard0;
+    let drawCard1;
+    let drawCard2;
+    let drawCard3;
+    let drawCard4;
+    let drawCard5;
+    let drawCard6;
+    let drawCard7;
+    let drawCard8;
+    let drawCard9;
+    let drawCard10;
+    let drawCard11;
+    let drawCard12;
+    let drawCard13;
+    let drawCard14;
+    // defines the four initial drawn cards (made it global so that I can remove them in the reset function)
+    const card1 = document.createElement('img');
+    const card2 = document.createElement('img');
+    const card3 = document.createElement('img');
+    const card4 = document.createElement('img');
+    let card1Uncovered;
+    // The box at the top that says if you win or lose
+    let winLossBlock = document.createElement('div');
+    winLossBlock.style.display = "fixed";
+    winLossBlock.top = "50%";
+    winLossBlock.style.width = '100%';
+    winLossBlock.style.textAlign = 'center';
+    winLossBlock.style.fontSize = "3em";
+
+    // initial deal button. Will deal out the first four cards as well as set up the deck ID
+    function deal(n){
+        // If someone busts it will not let you run the function
+        if (winLoss == false){
+    fetch(`https://deckofcardsapi.com/api/deck/new/draw/?count=${n}`)
+    .then(response => response.json())
+    .then(data => {
+        //Sets deck ID
+        deck_id = data.deck_id;
+
+        // Console logs used for troubleshooting
+        //console.log(deck_id);
+        //console.log(data);
+        //console.log(data.cards[0].code);
+
+        // add starting cards to player and dealer hands:
+        // Adds first card to dealer's hand
+        // if the card is a King, Queen, or Jack it adds 10 to the dealer's hand
+        if ((data.cards[0].value == "KING") || (data.cards[0].value == "QUEEN") || (data.cards[0].value == "JACK")) {
+            dealerH += 10;
+        // if the card is an ace it will add 11 to the dealer's hand, increase the ammount needed to bust by 10, and increase the amount of aces in the hand
+        } else if (data.cards[0].value == "ACE") {
+            dealerH += 11;
+            dealerBustH += 10;
+            dealerHAce++;
+        // otherwise it will add the value of the card to the hand
+        } else {
+            dealerH += Number(data.cards[0].value)
+        }
+        // Adds second card to dealer's hand
+        // if the card is a King, Queen, or Jack it adds 10 to the dealer's han
+        if ((data.cards[1].value == "KING") || (data.cards[1].value == "QUEEN") || (data.cards[1].value == "JACK")) {
+            dealerH += 10;
+        // if the card is an ace it will add 11 to the dealer's hand, increase the ammount needed to bust by 10, and increase the amount of aces in the hand
+        } else if (data.cards[1].value == "ACE") {
+            dealerH += 11;
+            dealerBustH += 10;
+            dealerHAce++;
+        // otherwise it will add the value of the card to the hand
+        } else {
+            dealerH += Number(data.cards[1].value)
+        }
+
+        // Adds first card to player's hand
+        // if the card is a King, Queen, or Jack it adds 10 to the player's hand
+        if ((data.cards[2].value == "KING") || (data.cards[2].value == "QUEEN") || (data.cards[2].value == "JACK")) {
+            playerH += 10;
+        // if the card is an ace it will add 11 to the player's hand, increase the ammount needed to bust by 10, and increase the amount of aces in the hand
+        } else if (data.cards[2].value == "ACE") {
+        playerH += 11;
+        playerBustH += 10;
+        playerHAce++;
+        // otherwise it will add the value of the card to the hand
+        } else {
+            playerH += Number(data.cards[2].value)
+        }
+        // Adds second card to player's hand
+        // if the card is a King, Queen, or Jack it adds 10 to the player's hand
+        if ((data.cards[3].value == "KING") || (data.cards[3].value == "QUEEN") || (data.cards[3].value == "JACK")) {
+            playerH += 10;
+        // if the card is an ace it will add 11 to the player's hand, increase the ammount needed to bust by 10, and increase the amount of aces in the hand
+        } else if (data.cards[3].value == "ACE") {
+        playerH += 11;
+        playerBustH += 10;
+        playerHAce++;
+        // otherwise it will add the value of the card to the hand
+        } else {
+            playerH += Number(data.cards[3].value)
+        }
+
+        // Log's the values of dealer and player's hands (for troubleshooting and making sure it is doing the correct math)
+        console.log(dealerH);
+        console.log(playerH);
+
+        // Sets the src and width of the images for the first four cards
+        card1Uncovered = data.cards[0].code + ".png";
+        card1.src = "card_back.png";
+        card1.width = "10%";
+        card2.src = data.cards[1].code + ".png";
+        card2.width = "10%";
+
+        card3.src = data.cards[2].code + ".png";
+        card3.width = "10%";
+        card4.src = data.cards[3].code + ".png";
+        card4.width = "10%";
+
+        // Displays the first four cards
+        dealerBox.appendChild(card1);
+        dealerBox.appendChild(card2);
+        playerBox.appendChild(card3);
+        playerBox.appendChild(card4);
+    })
+    .catch(error => console.error(error));
+
+}}
+    // Function used when Hit button is pressed, or when the dealer draws a card
+    function hit(p){
+    // if someone busts it will not let you run the function
+        if (winLoss == false) {
+        fetch(`https://deckofcardsapi.com/api/deck/${deck_id}/draw/?count=1`)
+    .then(response => response.json())
+    .then(data2 => {
+        // logs the data / drawn card
+        console.log(data2)
+        // defines and adds the src to the drawn cards using eval to make a string into code. Also draws from a count variable to index the drawn cards
+        eval("drawCard" + drawCount + ' = ' + "document.createElement('img');")
+        console.log(eval('drawCard' + drawCount));
+        eval('drawCard' + drawCount).width = "10%";
+        eval('drawCard' + drawCount).src = data2.cards[0].code + ".png";
+
+        // add a drawn card to the player's hand
+        if (p == "player"){
+        if ((data2.cards[0].value == "KING") || (data2.cards[0].value == "QUEEN") || (data2.cards[0].value == "JACK")) {
+            playerH += 10;
+        } else if (data2.cards[0].value == "ACE") {
+            playerH += 11;
+            playerBustH += 10;
+            playerHAce++;
+        } else {
+            playerH += Number(data2.cards[0].value)
+        }
+        // Adds the drawn card to a list of cards that were drawn on the player's side
+        playerList.push(eval('drawCard' + drawCount));
+        // Display's all of the drawn cards
+        for(i=0; i < playerList.length; i++){
+        playerBox.appendChild(playerList[i]);
+    }
+        playerCount++;
+    // console.log(playerList);
+    }
+    // add a drawn card to the dealer's hand
+    if (p == "dealer"){
+        if ((data2.cards[0].value == "KING") || (data2.cards[0].value == "QUEEN") || (data2.cards[0].value == "JACK")) {
+            dealerH += 10;
+        } else if (data2.cards[0].value == "ACE") {
+            dealerH += 11;
+            dealerBustH += 10;
+            dealerHAce++;
+        } else {
+            dealerH += Number(data2.cards[0].value)
+        }
+        // Adds the drawn card to a list of all cards that were drawn on the dealer's side
+        dealerList.push(eval('drawCard' + drawCount));
+        for(i=0; i < dealerList.length; i++){
+        dealerBox.appendChild(dealerList[i]);
+    }
+        dealerCount++;
+        // if the dealer draws a card it will rerun the checkWin function
+        checkWin();
+    }
+    // increases count and logs the hands of the dealer and player (for testing purposes)
+    drawCount++;
+    console.log(dealerH);
+    console.log(playerH);
+    // checks if the player or the dealer bust
+    checkBust();
+    })
+
+}}
+
+    function reset(){
+    deck_id = "";
+    dealerH = 0;
+    dealerHAce = 0;
+    playerH = 0;
+    playerHAce = 0;
+    drawCount = 0;
+    winLoss = false;
+    dealerBustH = 21;
+    playerBustH = 21;
+
+    dealerBox.removeChild(card1);
+    dealerBox.removeChild(card2);
+    playerBox.removeChild(card3);
+    playerBox.removeChild(card4);
+    winDisplay.removeChild(winLossBlock);
+        for (i = playerList.length -1; i >= 0; i--) {
+            playerBox.removeChild(playerList[i]);
+            playerList.splice(i,1);
+        }
+        for(i = dealerList.length -1; i >= 0; i--) {
+        dealerBox.removeChild(dealerList[i]);
+        dealerList.splice(i,1);
+    }
+
+
+
+        winLoss = false;
+    }
+    function checkBust(){
+        if (playerH > playerBustH) {
+            //display Bust
+            winLoss = true;
+            card1.src = card1Uncovered;
+            winLossBlock.innerHTML = "Bust";
+            winLossBlock.style.color = "Red";
+            winDisplay.appendChild(winLossBlock);
+            
+        } else if(dealerH > dealerBustH) {
+            //display Win!
+            winLossBlock.innerHTML = "YOU WIN!!!";
+            winLossBlock.style.color = "gold";
+            winDisplay.appendChild(winLossBlock);
+            winLoss = true;
+        }
+        console.log('checkBust ' + winLoss);
+    }
+    function checkWin(){
+        card1.src = card1Uncovered;
+        dealerBox.appendChild(card1);
+
+
+        checkBust();
+        if (playerH > dealerH && dealerH < 17) {
+            //display Win!
+            hit('dealer');
+            
+        } 
+        
+        if (playerH > 21){
+        for(i = playerHAce; i > 0; i--){
+            playerH -= 10;
+            playerBustH -= 10;
+        }}
+        if (dealerH > 21) {
+        for(i = dealerHAce; i > 0; i--){
+            dealerH -= 10;
+            dealerBustH -= 10;
+        }}
+
+        if (playerH > dealerH) {
+            //display Win!
+            winLossBlock.innerHTML = "YOU WIN!!!";
+            winLossBlock.style.color = "gold";
+            winDisplay.appendChild(winLossBlock);
+            winLoss = true;
+        } else if (playerH == dealerH) {
+            // display Push!
+            winLossBlock.innerHTML = "Push";
+            winLossBlock.style.color = "white";
+            winDisplay.appendChild(winLossBlock);
+            winLoss = true;
+        } else if (playerH < dealerH) {
+            winLossBlock.innerHTML = "You Lose :(";
+            winLossBlock.style.color = "Red";
+            winDisplay.appendChild(winLossBlock);
+            winLoss = true;
+        }
+        console.log('checkWin ' + winLoss);
+    }
+    
+  </script>
+</body>
+</html>

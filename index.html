@@ -91,6 +91,7 @@ img {
     // setup all global variables used
     dealerBox = document.getElementById('dealerBox');
     playerBox = document.getElementById('playerBox');
+    controlsBox = document.getElementById('controlsBox');
     winDisplay = document.getElementById('winDisplay');
     let deck_id = "";
     let dealerH = 0;
@@ -135,6 +136,7 @@ img {
     winLossBlock.style.width = '100%';
     winLossBlock.style.textAlign = 'center';
     winLossBlock.style.fontSize = "3em";
+
 
     // initial deal button. Will deal out the first four cards as well as set up the deck ID
     function deal(n){
@@ -227,6 +229,7 @@ img {
         dealerBox.appendChild(card2);
         playerBox.appendChild(card3);
         playerBox.appendChild(card4);
+
     })
     .catch(error => console.error(error));
 
@@ -297,6 +300,7 @@ img {
 }}
 
     function reset(){
+    // Resets all variables that are used in the game
     deck_id = "";
     dealerH = 0;
     dealerHAce = 0;
@@ -306,7 +310,7 @@ img {
     winLoss = false;
     dealerBustH = 21;
     playerBustH = 21;
-
+    // Removes the pictures from the blocks
     dealerBox.removeChild(card1);
     dealerBox.removeChild(card2);
     playerBox.removeChild(card3);
@@ -325,7 +329,9 @@ img {
 
         winLoss = false;
     }
+    // Function that is used to check if the player or dealer has busted yet
     function checkBust(){
+        // if the player busts it will display bust on the screen and reveal the dealer's first card
         if (playerH > playerBustH) {
             //display Bust
             winLoss = true;
@@ -333,7 +339,7 @@ img {
             winLossBlock.innerHTML = "Bust";
             winLossBlock.style.color = "Red";
             winDisplay.appendChild(winLossBlock);
-            
+          // if the dealer busts it will display you win  
         } else if(dealerH > dealerBustH) {
             //display Win!
             winLossBlock.innerHTML = "YOU WIN!!!";
@@ -341,44 +347,55 @@ img {
             winDisplay.appendChild(winLossBlock);
             winLoss = true;
         }
+        // used for debugging
         console.log('checkBust ' + winLoss);
     }
+    // checks if a player or if the dealer has won
     function checkWin(){
+        if (winLoss == true) {
+            return
+        }
+        // reveals the dealers face down card
         card1.src = card1Uncovered;
         dealerBox.appendChild(card1);
 
-
+        // checks if the player or dealer have busted yet
         checkBust();
+        // if the player has more than the dealer, and the dealer has under 17 the dealer will hit
         if (playerH > dealerH && dealerH < 17) {
             //display Win!
             hit('dealer');
             
         } 
-        
+        // if the player's hand is over 21 it will remove 10 for each ace you have
         if (playerH > 21){
         for(i = playerHAce; i > 0; i--){
             playerH -= 10;
             playerBustH -= 10;
         }}
+        // if the dealer's hand is over 21 it will remove 10 for each ace the dealer has
         if (dealerH > 21) {
         for(i = dealerHAce; i > 0; i--){
             dealerH -= 10;
             dealerBustH -= 10;
         }}
-
+        // if the player's hand is greater than the dealers hand:
         if (playerH > dealerH) {
             //display Win!
             winLossBlock.innerHTML = "YOU WIN!!!";
             winLossBlock.style.color = "gold";
             winDisplay.appendChild(winLossBlock);
             winLoss = true;
+        // if it is a tie:
         } else if (playerH == dealerH) {
             // display Push!
             winLossBlock.innerHTML = "Push";
             winLossBlock.style.color = "white";
             winDisplay.appendChild(winLossBlock);
             winLoss = true;
+        // if the player's hand is lower than the dealer's hand:
         } else if (playerH < dealerH) {
+            // display you lose
             winLossBlock.innerHTML = "You Lose :(";
             winLossBlock.style.color = "Red";
             winDisplay.appendChild(winLossBlock);
